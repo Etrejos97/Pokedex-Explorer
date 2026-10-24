@@ -14,7 +14,7 @@ Escaneo el QR con Expo Go (Android) o con la cámara (iOS).
 ## Árbol de carpetas
 
 ```
-pokedex-explorer/
+pokedex/
 ├── App.js                       # Punto de entrada: decide si se ve la lista o la ficha
 └── src/
     ├── services/
@@ -22,7 +22,7 @@ pokedex-explorer/
     ├── hooks/
     │   ├── usePokemonList.js    # Estado de la lista: páginas, carga, error y scroll infinito
     │   ├── usePokemonDetail.js  # Estado de la ficha: carga, error, sin resultados y reintento
-    │   └── useEvolutionChain.js # Estado de la cadena de evolución de la ficha, con su propio reintento
+    │   └── useSpecies.js        # Estado de la especie (categoría, descripción y evoluciones), con su propio reintento
     ├── views/
     │   ├── PokemonListView.js   # Vista de lista: título, buscador y cuadrícula de 2 columnas
     │   └── PokemonDetailView.js # Vista de detalle: imagen, tipos, medidas y estadísticas
@@ -32,6 +32,7 @@ pokedex-explorer/
     │   ├── IconButton.js        # Botón con ícono (@expo/vector-icons) y texto, hecho con Pressable
     │   ├── TypeBadge.js         # Distintivo de color por tipo, con su ícono
     │   ├── StatBar.js           # Fila de estadística con barra proporcional a 255
+    │   ├── DescriptionCard.js   # Tarjeta "Descripción" de la ficha, con el texto de la Pokédex en español
     │   ├── EvolutionSection.js  # Sección "Evoluciones" de la ficha: de a 3 por fila, con su fase
     │   ├── LoadingState.js      # Estado "cargando": indicador + texto
     │   └── MessageState.js      # Estados "error" y "sin resultados", con botón opcional
@@ -65,9 +66,18 @@ Para mostrar u ocultar la ficha uso un estado (`selectedPokemon`) en lugar de un
 
 La ficha muestra la cadena de evolución del pokémon de a 3 por fila, cada uno con su fase (Básico, Fase 1 o Fase 2, los nombres del juego de cartas en español). Tocar una evolución abre su ficha.
 
-- La ficha trae `species.url`. La especie trae `evolution_chain.url`, y esa URL trae la cadena: son dos peticiones más, en `fetchEvolutionChain`.
+- La ficha trae `species.url`. La especie trae `evolution_chain.url`, y esa URL trae la cadena: son dos peticiones más, en `fetchSpecies`.
 - La cadena llega como un árbol (`evolves_to`). La recorro por fases con un `while`: la fase siguiente son todos los `evolves_to` de la fase actual. Así salen bien las cadenas con ramas, como Eevee (8 evoluciones) o Wurmple (2 caminos), sin recursión.
-- Las evoluciones tienen su propio hook (`useEvolutionChain`): la ficha aparece apenas llega, y si la cadena falla, solo esa sección muestra "Reintentar".
+- Las evoluciones tienen su propio hook (`useSpecies`, que también trae la descripción): la ficha aparece apenas llega, y si la cadena falla, solo esa sección muestra "Reintentar".
+
+## Descripción y categoría
+
+La ficha muestra la categoría del pokémon debajo del nombre ("Pokémon Ratón") y una tarjeta con su descripción de la Pokédex.
+
+- Las dos salen de la especie, la misma respuesta que ya pedía para las evoluciones: no agregan peticiones.
+- La especie trae una descripción por juego y en varios idiomas (`flavor_text_entries`). Con `filter` me quedo con las de español y muestro la última, la del juego más reciente. La categoría sale de `genera` con `find`.
+- El texto trae los saltos de línea del juego (`\n` y `\f`): los cambio por espacios.
+- Los pokémon más nuevos (de Sprigatito, #906, en adelante) no tienen texto en español en la API: la tarjeta lo dice y la categoría no aparece.
 
 ## Códigos HTTP
 
@@ -92,4 +102,4 @@ El buscador cambia los espacios por guiones porque la API responde 400 con un es
 | Sin resultados | — | Mensaje cuando el nombre buscado no existe (la API responde 404) |
 | Éxito | Cuadrícula de 2 columnas | Ficha completa |
 
-La sección de evoluciones tiene sus propios estados: "Cargando evoluciones...", error con "Reintentar" y "Este pokémon no evoluciona".
+La descripción y las evoluciones tienen sus propios estados: "Cargando...", error con "Reintentar", "Este pokémon todavía no tiene descripción en español" y "Este pokémon no evoluciona".

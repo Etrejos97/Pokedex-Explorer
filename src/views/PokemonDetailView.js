@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import DescriptionCard from '../components/DescriptionCard';
 import EvolutionSection from '../components/EvolutionSection';
 import IconButton from '../components/IconButton';
 import LoadingState from '../components/LoadingState';
@@ -7,8 +8,8 @@ import MessageState from '../components/MessageState';
 import StatBar from '../components/StatBar';
 import TypeBadge from '../components/TypeBadge';
 import { POKEBALL_IMAGE_URL, POKEMON_TYPES, UNKNOWN_TYPE } from '../constants/pokemon';
-import { useEvolutionChain } from '../hooks/useEvolutionChain';
 import { usePokemonDetail } from '../hooks/usePokemonDetail';
+import { useSpecies } from '../hooks/useSpecies';
 import { colors } from '../theme/colors';
 import { getErrorMessage } from '../utils/errorMessages';
 import { capitalize, formatNumber } from '../utils/formatters';
@@ -16,7 +17,7 @@ import { capitalize, formatNumber } from '../utils/formatters';
 export default function PokemonDetailView({ nameOrId, onBack, onSelect }) {
   const { pokemon, isLoading, error, retry } = usePokemonDetail(nameOrId);
 
-  const evolution = useEvolutionChain(pokemon ? pokemon.speciesUrl : null);
+  const species = useSpecies(pokemon ? pokemon.speciesUrl : null);
 
   const renderContent = () => {
     if (isLoading) {
@@ -50,6 +51,7 @@ export default function PokemonDetailView({ nameOrId, onBack, onSelect }) {
         <Image source={{ uri: pokemon.imageUrl }} style={styles.image} />
         <Text style={styles.number}>{formatNumber(pokemon.id)}</Text>
         <Text style={styles.name}>{capitalize(pokemon.name)}</Text>
+        {species.genus !== null && <Text style={styles.genus}>{species.genus}</Text>}
 
         <View style={styles.types}>
           {pokemon.types.map((type) => (
@@ -70,6 +72,13 @@ export default function PokemonDetailView({ nameOrId, onBack, onSelect }) {
           </View>
         </View>
 
+        <DescriptionCard
+          description={species.description}
+          isLoading={species.isLoading}
+          error={species.error}
+          onRetry={species.retry}
+        />
+
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Estadísticas base</Text>
           {pokemon.stats.map((stat) => (
@@ -78,10 +87,10 @@ export default function PokemonDetailView({ nameOrId, onBack, onSelect }) {
         </View>
 
         <EvolutionSection
-          evolutions={evolution.evolutions}
-          isLoading={evolution.isLoading}
-          error={evolution.error}
-          onRetry={evolution.retry}
+          evolutions={species.evolutions}
+          isLoading={species.isLoading}
+          error={species.error}
+          onRetry={species.retry}
           currentName={pokemon.name}
           onSelect={onSelect}
         />
@@ -124,6 +133,10 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
+  },
+  genus: {
+    color: colors.textMuted,
+    fontStyle: 'italic',
   },
   types: {
     flexDirection: 'row',

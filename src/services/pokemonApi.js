@@ -1,3 +1,4 @@
+
 const BASE_URL = 'https://pokeapi.co/api/v2';
 
 const ARTWORK_URL =
@@ -78,12 +79,21 @@ const toEvolutionItem = (species, stage) => {
   return { id, name: species.name, imageUrl: getArtworkUrl(id), stage };
 };
 
-export const fetchEvolutionChain = async (speciesUrl) => {
+const cleanText = (text) => text.split('\n').join(' ').split('\f').join(' ');
+
+export const fetchSpecies = async (speciesUrl) => {
   const speciesResponse = await fetch(speciesUrl);
   if (!speciesResponse.ok) {
     throw createHttpError(speciesResponse);
   }
   const species = await speciesResponse.json();
+
+  const spanishTexts = species.flavor_text_entries.filter((entry) => entry.language.name === 'es');
+  const description =
+    spanishTexts.length > 0 ? cleanText(spanishTexts[spanishTexts.length - 1].flavor_text) : null;
+
+  const spanishGenus = species.genera.find((item) => item.language.name === 'es');
+  const genus = spanishGenus !== undefined ? spanishGenus.genus : null;
 
   const chainResponse = await fetch(species.evolution_chain.url);
   if (!chainResponse.ok) {
@@ -105,5 +115,5 @@ export const fetchEvolutionChain = async (speciesUrl) => {
     stage = stage + 1;
   }
 
-  return evolutions;
+  return { genus, description, evolutions };
 };

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { fetchEvolutionChain } from '../services/pokemonApi';
+import { fetchSpecies } from '../services/pokemonApi';
 
-export const useEvolutionChain = (speciesUrl) => {
-  const [evolutions, setEvolutions] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+export const useSpecies = (speciesUrl) => {
+  const [species, setSpecies] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [attempt, setAttempt] = useState(0);
 
@@ -17,11 +17,11 @@ export const useEvolutionChain = (speciesUrl) => {
     const load = async () => {
       setIsLoading(true);
       setError(null);
-      setEvolutions([]);
+      setSpecies(null);
       try {
-        const data = await fetchEvolutionChain(speciesUrl);
+        const data = await fetchSpecies(speciesUrl);
         if (isActive) {
-          setEvolutions(data);
+          setSpecies(data);
         }
       } catch (err) {
         if (isActive) {
@@ -43,5 +43,12 @@ export const useEvolutionChain = (speciesUrl) => {
 
   const retry = () => setAttempt((previous) => previous + 1);
 
-  return { evolutions, isLoading, error, retry };
+  return {
+    genus: species !== null ? species.genus : null,
+    description: species !== null ? species.description : null,
+    evolutions: species !== null ? species.evolutions : [],
+    isLoading,
+    error,
+    retry,
+  };
 };
