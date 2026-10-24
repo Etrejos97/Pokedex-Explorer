@@ -21,7 +21,8 @@ pokedex-explorer/
     │   └── pokemonApi.js        # Único archivo que llama a la PokéAPI con fetch
     ├── hooks/
     │   ├── usePokemonList.js    # Estado de la lista: páginas, carga, error y scroll infinito
-    │   └── usePokemonDetail.js  # Estado de la ficha: carga, error, sin resultados y reintento
+    │   ├── usePokemonDetail.js  # Estado de la ficha: carga, error, sin resultados y reintento
+    │   └── useEvolutionChain.js # Estado de la cadena de evolución de la ficha, con su propio reintento
     ├── views/
     │   ├── PokemonListView.js   # Vista de lista: título, buscador y cuadrícula de 2 columnas
     │   └── PokemonDetailView.js # Vista de detalle: imagen, tipos, medidas y estadísticas
@@ -31,6 +32,7 @@ pokedex-explorer/
     │   ├── IconButton.js        # Botón con ícono (@expo/vector-icons) y texto, hecho con Pressable
     │   ├── TypeBadge.js         # Distintivo de color por tipo, con su ícono
     │   ├── StatBar.js           # Fila de estadística con barra proporcional a 255
+    │   ├── EvolutionSection.js  # Sección "Evoluciones" de la ficha: de a 3 por fila, con su fase
     │   ├── LoadingState.js      # Estado "cargando": indicador + texto
     │   └── MessageState.js      # Estados "error" y "sin resultados", con botón opcional
     ├── constants/
@@ -59,6 +61,14 @@ Las imágenes salen de la PokéAPI y de su repositorio de sprites (artwork, íco
 
 Para mostrar u ocultar la ficha uso un estado (`selectedPokemon`) en lugar de una librería de navegación. El taller pide una pantalla con dos vistas y solo instala `react-native-safe-area-context`.
 
+## Evoluciones
+
+La ficha muestra la cadena de evolución del pokémon de a 3 por fila, cada uno con su fase (Básico, Fase 1 o Fase 2, los nombres del juego de cartas en español). Tocar una evolución abre su ficha.
+
+- La ficha trae `species.url`. La especie trae `evolution_chain.url`, y esa URL trae la cadena: son dos peticiones más, en `fetchEvolutionChain`.
+- La cadena llega como un árbol (`evolves_to`). La recorro por fases con un `while`: la fase siguiente son todos los `evolves_to` de la fase actual. Así salen bien las cadenas con ramas, como Eevee (8 evoluciones) o Wurmple (2 caminos), sin recursión.
+- Las evoluciones tienen su propio hook (`useEvolutionChain`): la ficha aparece apenas llega, y si la cadena falla, solo esa sección muestra "Reintentar".
+
 ## Códigos HTTP
 
 Cada función del servicio revisa `response.ok` antes de `response.json()`. Si la respuesta no es un 2xx, lanza un error que lleva el código en `error.status`, y `getErrorMessage` elige el mensaje:
@@ -81,3 +91,5 @@ El buscador cambia los espacios por guiones porque la API responde 400 con un es
 | Error | Mensaje según el código HTTP + botón "Reintentar" | Mensaje según el código HTTP + botón "Reintentar" |
 | Sin resultados | — | Mensaje cuando el nombre buscado no existe (la API responde 404) |
 | Éxito | Cuadrícula de 2 columnas | Ficha completa |
+
+La sección de evoluciones tiene sus propios estados: "Cargando evoluciones...", error con "Reintentar" y "Este pokémon no evoluciona".

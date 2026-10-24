@@ -8,7 +8,9 @@ import PokemonDetailView from './src/views/PokemonDetailView';
 import PokemonListView from './src/views/PokemonListView';
 
 export default function App() {
+  
   const [selectedPokemon, setSelectedPokemon] = useState(null);
+
   const pokemonList = usePokemonList();
 
   return (
@@ -24,11 +26,13 @@ export default function App() {
             onSelect={setSelectedPokemon}
             onSearch={setSelectedPokemon}
           />
+
           {selectedPokemon !== null && (
             <View style={styles.detailLayer}>
               <PokemonDetailView
                 nameOrId={selectedPokemon}
                 onBack={() => setSelectedPokemon(null)}
+                onSelect={setSelectedPokemon}
               />
             </View>
           )}
